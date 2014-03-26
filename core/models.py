@@ -35,20 +35,52 @@ class WikiPage(models.Model):
         2. Capital letters surrounded by lowercase letters should have a space
             added before them.
         3. Slashes should have spaces added around them.
+
+        Returns:
+            String representing a formatted WikiPage title.
         """
 
-        title = re.sub("([a-z])([A-Z])","\g<1> \g<2>", self.url)
+        title = re.sub('([a-z])([A-Z])', '\g<1> \g<2>', self.url)
         title = title.replace('_', ' ').replace('/', ' / ')
+
         return title.title()
 
     @property
     def rendered_html(self):
-        file = open(self.markdown, 'rb')
-        content = ''.join(file.readlines())
-        file.close()
+        """Gets rendered HTML from WikiPage's markdown file.
 
-        return markdown.markdown(content)
+        Returns:
+            Unicode string representing rendered html from markdown file.
+        """
 
+        return markdown.markdown(self.body)
+
+    @property
+    def body(self):
+        """This property returns the content of the markdown file associated
+         with this WikiPage instance.
+
+        Returns:
+            Unicode string representing markdown file content.
+        """
+
+        f = open(self.markdown, 'rb')
+        content = ''.join(f.readlines())
+        f.close()
+
+        return content
+
+    @body.setter
+    def body(self, text):
+        """Updates the content of the markdown file associated to this WikiPage.
+
+        Attributes:
+            text: Unicode string representing the new value for the markdown
+            file.
+        """
+        f = open(self.markdown, 'wb')
+        f.write(text)
+        f.close()
 
 
 class Changelog(models.Model):
