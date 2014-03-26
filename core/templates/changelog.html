@@ -1,0 +1,19 @@
+{% include "base.html" %}
+
+{% block content %}
+<div class="page-title">{{ title }}</div>
+<div class="page-body">
+    {% with changelogs as changelogs %}
+    {% if changelogs %}
+    {% comment %}Showing a list of change logs for a WikiPages{% endcomment %}
+    <ul>
+        {% for change in changelogs %}
+        <li></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <span>No change log entries at the moment.</span>
+    {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}
