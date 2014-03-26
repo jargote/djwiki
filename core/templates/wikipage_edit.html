@@ -2,5 +2,11 @@
 
 {% block content %}
 <div class="page-title">Edit page "{{ wikipage.title }}".</div>
-<div class="page-body">{{ wikiform }}</div>
+<div class="page-body">
+    <form method="post">
+        {% csrf_token %}
+        {{ wikiform }}
+        <input type="submit" value="Save">
+    </form>
+    </div>
 {% endblock %}
