@@ -1,4 +1,5 @@
 import re
+import markdown
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -9,7 +10,7 @@ class WikiPage(models.Model):
 
     Attributes:
         url: String representing the WikiPage's instance url.
-        body: Text to format as Html using Markdown.
+        markdown: File path to the WikiPage markdown file.
         author: User who's created the WikiPage model instance.
         created_on: Datetime timestamp that represents when a page instance was
             created.
@@ -18,7 +19,7 @@ class WikiPage(models.Model):
     """
 
     url = models.CharField('Url', max_length=150)
-    body = models.TextField('Body', blank=True)
+    markdown = models.FilePathField()
     author = models.ForeignKey(User, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
@@ -42,7 +43,12 @@ class WikiPage(models.Model):
 
     @property
     def rendered_html(self):
-        pass
+        file = open(self.markdown, 'rb')
+        content = ''.join(file.readlines())
+        file.close()
+
+        return markdown.markdown(content)
+
 
 
 class Changelog(models.Model):
