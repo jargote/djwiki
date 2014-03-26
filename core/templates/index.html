@@ -1,18 +1,33 @@
 {% include "base.html" %}
 
 {% block content %}
+{% with wikipages as wikipages %}
 <div class="page-title">{{ title }}</div>
 <div class="page-body">
-    {% with wikipages as wikipages %}
     {% if wikipages %}
+    {% comment %}Showing a list of WikiPages created in djwiki{% endcomment %}
     <ul>
         {% for page in wikipages %}
-        <li><a href="{% url view_page page.url %}">{{ page.title }}</a></li>
+        <li><a href="{% url 'view_page' page.url %}">{{ page.title }}</a></li>
         {% endfor %}
-    </ul>
     {% else %}
     <span>No wiki entries at the moment.</span>
     {% endif %}
-    {% endwith %}
 </div>
+<div class="page-pagination">
+    <span class="step-links">
+        {% if wikipages.has_previous %}
+            <a href="?page={{ wikipages.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ wikipages.number }} of {{ wikipages.paginator.num_pages }}.
+        </span>
+
+        {% if wikipages.has_next %}
+            <a href="?page={{ wikipages.next_page_number }}">next</a>
+        {% endif %}
+    </span>
+</div>
+{% endwith %}
 {% endblock %}
