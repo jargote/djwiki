@@ -1,7 +1,7 @@
 {% include "base.html" %}
 
 {% block content %}
-{% with wikipages as wikipages %}
+{% with wikipages=wikipages %}
 <div class="page-title">{{ title }}</div>
 <div class="page-body">
     {% if wikipages %}
@@ -14,20 +14,8 @@
     <span>No wiki entries at the moment.</span>
     {% endif %}
 </div>
-<div class="page-pagination">
-    <span class="step-links">
-        {% if wikipages.has_previous %}
-            <a href="?page={{ wikipages.previous_page_number }}">previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ wikipages.number }} of {{ wikipages.paginator.num_pages }}.
-        </span>
-
-        {% if wikipages.has_next %}
-            <a href="?page={{ wikipages.next_page_number }}">next</a>
-        {% endif %}
-    </span>
-</div>
+{% with paginator=wikipages %}
+{% include "snippets/pagination.html" %}
+{% endwith %}
 {% endwith %}
 {% endblock %}
