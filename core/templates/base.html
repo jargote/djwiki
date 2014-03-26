@@ -6,6 +6,10 @@
 <body>
     <div class="wiki-header">
         <h1>Welcome to djWiki!</h1>
+        <div class="nav-menu">
+            <a href="{% url 'wiki_index' %}">Index</a>|
+            <a href="{% url 'global_changelog' %}">Change Log</a>
+        </div>
     </div>
     <div class="wiki-content"
     {% comment %} Where djwiki main content will be displayed.{% endcomment %}
