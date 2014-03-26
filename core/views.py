@@ -3,6 +3,7 @@ from django.shortcuts import render, HttpResponseRedirect, urlresolvers
 
 from core import utils
 from core.models import WikiPage, Changelog
+from core.forms import WikiPageForm
 
 
 def index(request):
@@ -18,7 +19,8 @@ def index(request):
     """
 
     page_number = request.GET.get('page', 1)
-    wikipages = utils.get_view_paginator(WikiPage, page_number, 10)
+    wikipages = utils.get_view_paginator(WikiPage, page_number, count=10,
+                                         ordering='url')
 
     return render(request, 'index.html', {'title': 'Index',
                                           'wikipages': wikipages})
@@ -69,11 +71,32 @@ def edit_page(request, page_url):
     try:
         # Trying to fetch wiki page given its page url.
         wikipage = WikiPage.objects.get(url=page_url)
+
     except exceptions.ObjectDoesNotExist:
+        # Create page automatically if this one does not exist.
         wikipage = WikiPage.objects.create(
             url=page_url, markdown=utils.get_markdown_filename(page_url))
+        wikipage.body = ''
+
+    # Show WikiPage edit form.
+    if request.method == 'GET':
+        wikipage_form = WikiPageForm(initial={'body': wikipage.body})
+
+    # Save WikiPage form changes.
+    elif request.method == 'POST':
+        wikipage_form = WikiPageForm(request.POST)
+        if wikipage_form.is_valid():
+            wikipage.body = wikipage_form.cleaned_data['body']
+            Changelog.objects.create(
+                wikipage=wikipage,
+                comments=wikipage_form.cleaned_data['comments'])
+
+            # Redirect response to view_page view.
+            return HttpResponseRedirect(
+                urlresolvers.reverse('view_page', args=[page_url]))
 
     return render(request, 'wikipage_edit.html', {'title': wikipage.title,
+                                                  'wikiform': wikipage_form,
                                                   'wikipage': wikipage})
 
 
@@ -94,21 +117,23 @@ def changelog(request, page_url=None):
     title = 'Global History'
     page_number = request.GET.get('page', 1)
 
-    # If page_url is present ChangeLog entries for given WikiPage should be
-    # displayed instead.
+    # If page_url is present then Changelog entries for that WikiPage should be
+    # displayed.
     if page_url:
         try:
             # Trying to fetch wiki page given its page url.
             wikipage = WikiPage.objects.get(url=page_url)
             title = '"%s" History' % wikipage.title
+
         except exceptions.ObjectDoesNotExist:
             # Redirect response to wikipage edit view.
             return HttpResponseRedirect(
                 urlresolvers.reverse('edit_page', args=[page_url]))
+
         else:
             # Filter ChangeLog entries for a WikiPage instance.
-            changelogs = utils.get_view_paginator(Changelog, page_number, 50,
-                                                  wikipage=wikipage)
+            changelogs = utils.get_view_paginator(
+                Changelog, page_number, filters={'wikipage': wikipage})
     else:
         # Return all ChangeLog instances in djwiki.
         changelogs = utils.get_view_paginator(Changelog, page_number)
