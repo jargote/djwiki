@@ -1,5 +1,7 @@
-from django.shortcuts import render, RequestContext
-from django.http import HttpResponse
+from django.shortcuts import render, HttpResponseRedirect, urlresolvers
+from django.core import exceptions
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from core.models import WikiPage, Changelog
 
 
 def index(request):
@@ -14,28 +16,129 @@ def index(request):
             index.html page.
     """
 
-    return render(request, 'index.html')
+    page_number = request.GET.get('page', 1)
+    wikipages = _get_view_paginator(WikiPage, page_number, 10)
+
+    return render(request, 'index.html', {'title': 'Index',
+                                          'wikipages': wikipages})
 
 
 def view_page(request, page_url):
+    """This view will display a WikiPage.
+
+    If page_url does not match any of the stored WikiPage urls then a "Page Do
+    Not exist" page will be displayed. This page also contains a link to create
+    this new page.
+
+    Attributes:
+        request: HttpRequest object representing the current request object.
+        page_url: WikiPage url.
+
+    Returns:
+        response: HttpResponse object used to render index page using
+            wikipage.html page.
     """
 
-    """
+    try:
+        # Trying to fetch wiki page given its page url.
+        wikipage = WikiPage.objects.get(url=page_url)
+    except exceptions.ObjectDoesNotExist:
+        wikipage = WikiPage(url=page_url)
 
-    return HttpResponse('This is the Page')
+    return render(request, 'wikipage.html', {'title': wikipage.title,
+                                             'wikipage': wikipage})
 
 
 def edit_page(request, page_url):
+    """This view will display a form to edit the body of a WikiPage instance.
+
+    If page_url does not match any of the stored WikiPage url then a new
+    instance will be created.
+
+    Attributes:
+        request: HttpRequest object representing the current request object.
+        page_url: WikiPage url.
+
+    Returns:
+        response: HttpResponse object used to render index page using
+            wikipage_edit.html page.
     """
 
+
+    try:
+        # Trying to fetch wiki page given its page url.
+        wikipage = WikiPage.objects.get(url=page_url)
+    except exceptions.ObjectDoesNotExist:
+        wikipage = WikiPage.objects.create(url=page_url)
+
+    return render(request, 'wikipage_edit.html', {'title': wikipage.title,
+                                                  'wikipage': wikipage})
+
+
+
+def changelog(request, page_url=None):
+    """This view display a change log for a given WikiPage or
+    all change logs in djwiki.
+
+    Attributes:
+        request: HttpRequest object representing the current request object.
+        page_url: WikiPage url, maybe None.
+
+    Returns:
+        response: HttpResponse object used to render index page using
+            changelog.html page.
+
     """
 
-    return HttpResponse('Edit this page!')
+    title = 'Global History'
+    page_number = request.GET.get('page', 1)
+
+    # If page_url is present ChangeLog entries for given WikiPage should be
+    # displayed instead.
+    if page_url:
+        try:
+            # Trying to fetch wiki page given its page url.
+            wikipage = WikiPage.objects.get(url=page_url)
+            title = '"%s" History' % wikipage.title
+        except exceptions.ObjectDoesNotExist:
+            # Redirect response to wikipage edit view.
+            return HttpResponseRedirect(
+                urlresolvers.reverse('edit_page', args=[page_url]))
+        else:
+            # Filter ChangeLog entries for a WikiPage instance.
+            changelogs = _get_view_paginator(Changelog, page_number, 50,
+                                             wikipage=wikipage)
+    else:
+        # Return all ChangeLog instances in djwiki.
+        changelogs = _get_view_paginator(Changelog, page_number)
+
+    return render(request, 'changelog.html', {'title': title,
+                                              'changelogs': changelogs})
 
 
-def changelog_view(request):
+def _get_view_paginator(model, page_number, count, **kwargs):
+    """Gets a Paginator object from a resulting Queryset applied to given
+    Model class.
+
+    Attributes:
+        model: Model class from which to build resulting Queryset.
+        page_number: Page number to paginate resulting Paginator object.
+        count: Max number of items per page in Paginator object.
+
+    Returns:
+        paginator: Paginator object.
+
     """
+    items = model.objects.filter(**kwargs)
+    paginator = Paginator(items, count)
 
-    """
+    try:
+        paginator = paginator.page(page_number)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        paginator = paginator.page(1)
+    except EmptyPage:
+        # If page is out of ran deliver last page of results.
+        paginator = paginator.page(paginator.num_pages)
 
-    return HttpResponse('This is our change log.')
+    return paginator
