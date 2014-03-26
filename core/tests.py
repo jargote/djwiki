@@ -1,32 +1,111 @@
+import os
+import hashlib
+
+from django.conf import settings
 from django.test import TestCase
-from core.models import WikiPage
+from django.contrib.auth.models import User
+
+from core import utils
+from core.models import WikiPage, Changelog
+
 
 
 class WikiPageTest(TestCase):
+    """Tests suite for WikiPage model class."""
 
     def test_title(self):
-        """Testing that a wiki page title is generated correctly from its url
+        """Tests that a wiki page title is generated correctly from its url
             value.
         """
 
-        page = WikiPage.objects.create(url='Dummy_TestPage/For/Fairfax')
+        wikipage = WikiPage()
 
         # Testing that Wikipage.title property converts a CamelCase properly.
-        page.url = 'HumanBody'
-        self.assertEqual('Human Body', page.title)
+        wikipage.url = 'HumanBody'
+        self.assertEqual('Human Body', wikipage.title)
 
         # Testing that Wikipage.title property converts a underscore properly.
-        page.url = 'human_body'
-        self.assertEqual('Human Body', page.title)
+        wikipage.url = 'human_body'
+        self.assertEqual('Human Body', wikipage.title)
 
         # Testing that Wikipage.title property converts a CamelCase/underscore
         # properly.
-        page.url = 'Parts_of_the_HumanBody'
-        self.assertEqual('Parts Of The Human Body', page.title)
+        wikipage.url = 'Parts_of_the_HumanBody'
+        self.assertEqual('Parts Of The Human Body', wikipage.title)
 
         # Testing that Wikipage.title property converts a CamelCase/slash
         # properly.
-        page.url = 'HumanBody/Parts'
-        self.assertEqual('Human Body / Parts', page.title)
+        wikipage.url = 'HumanBody/Parts'
+        self.assertEqual('Human Body / Parts', wikipage.title)
 
+    def test_render_html(self):
+        """Tests that markdown text is rendered as HTML."""
+
+        # Creating a test markdown file.
+        filename = utils.get_markdown_filename('DummyWikiPageUrl')
+        f = open(filename, 'wb+')
+        f.write('A First Level Header\n')
+        f.write('====================\n')
+        f.write('A Second Level Header\n')
+        f.write('---------------------\n')
+        f.write('Now is the time for all good men to come to the aid of\n'
+                'their country. This is just a regular paragraph.\n\n')
+        f.write('The quick brown fox jumped over the lazy dog\'s back.')
+        f.close()
+
+        # Linking markdown file to WikiPage instance.
+        wikipage = WikiPage(url='DummyWikiPageUrl', markdown=filename)
+
+        # Testing that Markdown renders HTML correctly.
+        self.assertEqual(
+            u'<h1>A First Level Header</h1>\n'
+            u'<h2>A Second Level Header</h2>\n'
+            u'<p>Now is the time for all good men to come to the aid of\n'
+            u'their country. This is just a regular paragraph.</p>\n'
+            u'<p>The quick brown fox jumped over the lazy dog\'s back.</p>',
+            wikipage.rendered_html)
+
+
+class ChangelogTest(TestCase):
+    """Tests suite for Changelog model class."""
+
+    def setUp(self):
+        self.test_wikipage = WikiPage.objects.create(url='TestWikiPage')
+
+    def test_created_by(self):
+        """Tests that Changelog author username is returned correctly."""
+
+        # Creating a dummy User object - Dummy author.
+        dummy_author = User.objects.create(username='DummyAuthor',
+                                           email='dummy@djwiki.com')
+
+        # Creating a test Changelog instance.
+        changelog = Changelog.objects.create(comments='This is my first change',
+                                             wikipage=self.test_wikipage,
+                                             author=dummy_author)
+
+        # Testing that author username is returned correctly.
+        self.assertEqual('DummyAuthor', changelog.created_by)
+
+        # Setting Changelog author to None.
+        changelog.author = None
+
+        # Testing that author username is 'Anonymous'.
+        self.assertEqual('Anonymous', changelog.created_by)
+
+
+class UtilsTest(TestCase):
+    """Test suite for utility functions."""
+
+    def test_get_markdown_filename(self):
+        """Tests that given WikiPage url an absolute path pointing to its
+        markdown file is returned.
+        """
+
+        page_url = 'ThisIsADummy_url'
+        filename = '%s.txt' % hashlib.sha1(page_url).hexdigest()
+        expected_path = os.path.join(settings.MARKDOWN_ROOT, filename)
+
+        # Testing that absolute path is returned correctly.
+        self.assertEqual(expected_path, utils.get_markdown_filename(page_url))
 
