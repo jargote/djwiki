@@ -13,6 +13,24 @@ from core.models import WikiPage, Changelog
 class WikiPageTest(TestCase):
     """Tests suite for WikiPage model class."""
 
+    def setUp(self):
+        # Creating a test markdown file.
+        self.filename = utils.get_markdown_filename('DummyWikiPageUrl')
+        f = open(self.filename, 'wb+')
+        f.write(u'A First Level Header\n')
+        f.write(u'====================\n')
+        f.write(u'A Second Level Header\n')
+        f.write(u'---------------------\n')
+        f.write(u'Now is the time for all good men to come to the aid of\n'
+                u'their country. This is just a regular paragraph.\n\n')
+        f.write(u'The quick brown fox jumped over the lazy dog\'s back.')
+        f.close()
+
+    def tearDown(self):
+        """Performs a clean operation in markdown folder."""
+
+        os.remove(self.filename)
+
     def test_title(self):
         """Tests that a wiki page title is generated correctly from its url
             value.
@@ -39,22 +57,12 @@ class WikiPageTest(TestCase):
         self.assertEqual('Human Body / Parts', wikipage.title)
 
     def test_render_html(self):
-        """Tests that markdown text is rendered as HTML."""
-
-        # Creating a test markdown file.
-        filename = utils.get_markdown_filename('DummyWikiPageUrl')
-        f = open(filename, 'wb+')
-        f.write('A First Level Header\n')
-        f.write('====================\n')
-        f.write('A Second Level Header\n')
-        f.write('---------------------\n')
-        f.write('Now is the time for all good men to come to the aid of\n'
-                'their country. This is just a regular paragraph.\n\n')
-        f.write('The quick brown fox jumped over the lazy dog\'s back.')
-        f.close()
+        """Tests that Wiki.render_html property returns rendered HTML from the
+        markdown file associated to the WikiPage instance.
+        """
 
         # Linking markdown file to WikiPage instance.
-        wikipage = WikiPage(url='DummyWikiPageUrl', markdown=filename)
+        wikipage = WikiPage(url='DummyWikiPageUrl', markdown=self.filename)
 
         # Testing that Markdown renders HTML correctly.
         self.assertEqual(
@@ -65,6 +73,22 @@ class WikiPageTest(TestCase):
             u'<p>The quick brown fox jumped over the lazy dog\'s back.</p>',
             wikipage.rendered_html)
 
+    def test_body(self):
+        """Test that WikiPage.body property returns the content of the markdown
+        file associated to the page."""
+
+        # Linking markdown file to WikiPage instance.
+        wikipage = WikiPage(url='DummyWikiPageUrl', markdown=self.filename)
+
+        self.assertEqual(
+            u'A First Level Header\n'
+            u'====================\n'
+            u'A Second Level Header\n'
+            u'---------------------\n'
+            u'Now is the time for all good men to come to the aid of\n'
+            u'their country. This is just a regular paragraph.\n\n'
+            u'The quick brown fox jumped over the lazy dog\'s back.',
+            wikipage.body)
 
 class ChangelogTest(TestCase):
     """Tests suite for Changelog model class."""
