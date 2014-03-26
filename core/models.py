@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -7,7 +9,6 @@ class WikiPage(models.Model):
 
     Attributes:
         url: String representing the WikiPage's instance url.
-        title: String representing the wiki page's title.
         body: Text to format as Html using Markdown.
         author: User who's created the WikiPage model instance.
         created_on: Datetime timestamp that represents when a page instance was
@@ -17,7 +18,6 @@ class WikiPage(models.Model):
     """
 
     url = models.CharField('Url', max_length=150)
-    title = models.CharField('Title', max_length=150)
     body = models.TextField('Body', blank=True)
     author = models.ForeignKey(User, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -25,6 +25,24 @@ class WikiPage(models.Model):
 
     class Meta:
         ordering = ('created_on',)
+
+    @property
+    def title(self):
+        """This method returns the wiki page title from the page url.
+
+        1. Underscores should be converted into spaces.
+        2. Capital letters surrounded by lowercase letters should have a space
+            added before them.
+        3. Slashes should have spaces added around them.
+        """
+
+        title = re.sub("([a-z])([A-Z])","\g<1> \g<2>", self.url)
+        title = title.replace('_', ' ').replace('/', ' / ')
+        return title.title()
+
+    @property
+    def rendered_html(self):
+        pass
 
 
 class Changelog(models.Model):
@@ -42,7 +60,7 @@ class Changelog(models.Model):
     """
 
     comments = models.TextField('Comments')
-    page = models.ForeignKey(WikiPage)
+    wikipage = models.ForeignKey(WikiPage)
     author = models.ForeignKey(User, blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
 
