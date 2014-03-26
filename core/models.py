@@ -67,8 +67,21 @@ class Changelog(models.Model):
 
     comments = models.TextField('Comments')
     wikipage = models.ForeignKey(WikiPage)
-    author = models.ForeignKey(User, blank=True)
+    author = models.ForeignKey(User, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ('created_on',)
+
+    @property
+    def created_by(self):
+        """Gets Changelog author's username.
+
+        Returns:
+            String representing change log author's username.
+        """
+
+        if not self.author:
+            return 'Anonymous'
+
+        return self.author.username
