@@ -1,6 +1,7 @@
-from django.shortcuts import render, HttpResponseRedirect, urlresolvers
 from django.core import exceptions
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.shortcuts import render, HttpResponseRedirect, urlresolvers
+
+from core import utils
 from core.models import WikiPage, Changelog
 
 
@@ -17,7 +18,7 @@ def index(request):
     """
 
     page_number = request.GET.get('page', 1)
-    wikipages = _get_view_paginator(WikiPage, page_number, 10)
+    wikipages = utils.get_view_paginator(WikiPage, page_number, 10)
 
     return render(request, 'index.html', {'title': 'Index',
                                           'wikipages': wikipages})
@@ -69,11 +70,11 @@ def edit_page(request, page_url):
         # Trying to fetch wiki page given its page url.
         wikipage = WikiPage.objects.get(url=page_url)
     except exceptions.ObjectDoesNotExist:
-        wikipage = WikiPage.objects.create(url=page_url)
+        wikipage = WikiPage.objects.create(
+            url=page_url, markdown=utils.get_markdown_filename(page_url))
 
     return render(request, 'wikipage_edit.html', {'title': wikipage.title,
                                                   'wikipage': wikipage})
-
 
 
 def changelog(request, page_url=None):
@@ -106,39 +107,12 @@ def changelog(request, page_url=None):
                 urlresolvers.reverse('edit_page', args=[page_url]))
         else:
             # Filter ChangeLog entries for a WikiPage instance.
-            changelogs = _get_view_paginator(Changelog, page_number, 50,
-                                             wikipage=wikipage)
+            changelogs = utils.get_view_paginator(Changelog, page_number, 50,
+                                                  wikipage=wikipage)
     else:
         # Return all ChangeLog instances in djwiki.
-        changelogs = _get_view_paginator(Changelog, page_number)
+        changelogs = utils.get_view_paginator(Changelog, page_number)
 
     return render(request, 'changelog.html', {'title': title,
+                                              'show_page': not page_url,
                                               'changelogs': changelogs})
-
-
-def _get_view_paginator(model, page_number, count, **kwargs):
-    """Gets a Paginator object from a resulting Queryset applied to given
-    Model class.
-
-    Attributes:
-        model: Model class from which to build resulting Queryset.
-        page_number: Page number to paginate resulting Paginator object.
-        count: Max number of items per page in Paginator object.
-
-    Returns:
-        paginator: Paginator object.
-
-    """
-    items = model.objects.filter(**kwargs)
-    paginator = Paginator(items, count)
-
-    try:
-        paginator = paginator.page(page_number)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        paginator = paginator.page(1)
-    except EmptyPage:
-        # If page is out of ran deliver last page of results.
-        paginator = paginator.page(paginator.num_pages)
-
-    return paginator
