@@ -5,7 +5,8 @@ from django.conf import settings
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
-def get_view_paginator(model, page_number=1, count=50, **kwargs):
+def get_view_paginator(model, page_number=1, count=50, filters={},
+                       ordering='-created_on'):
     """Gets a Paginator object from a resulting Queryset applied to given
     Model class.
 
@@ -18,7 +19,8 @@ def get_view_paginator(model, page_number=1, count=50, **kwargs):
         paginator: Paginator object.
 
     """
-    items = model.objects.filter(**kwargs)
+
+    items = model.objects.filter(**filters).order_by(ordering)
     paginator = Paginator(items, count)
 
     try:
