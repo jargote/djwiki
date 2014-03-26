@@ -1,19 +1,31 @@
 {% include "base.html" %}
 
 {% block content %}
+{% with changelogs as changelogs %}
 <div class="page-title">{{ title }}</div>
 <div class="page-body">
-    {% with changelogs as changelogs %}
     {% if changelogs %}
     {% comment %}Showing a list of change logs for a WikiPages{% endcomment %}
     <ul>
         {% for change in changelogs %}
-        <li></li>
+        {% with page=change.wikipage %}
+        <li>
+            <span>On {{ change.created_on }}</span>
+            <span>By {{ change.created_by }}</span>
+            {% if show_page %}
+            <span>In <a href="{% url 'view_page' page.url %}">{{ page.title }}</a></span>
+            {% endif %}
+            <span>"{{ change.comments|escape }}"</span>
+        </li>
+        {% endwith %}
         {% endfor %}
     </ul>
     {% else %}
     <span>No change log entries at the moment.</span>
     {% endif %}
-    {% endwith %}
 </div>
+{% with paginator=changelogs %}
+{% include "snippets/pagination.html" %}
+{% endwith %}
+{% endwith %}
 {% endblock %}
