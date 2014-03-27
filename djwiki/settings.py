@@ -83,6 +83,3 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
-
-# Markdown files location
-MARKDOWN_ROOT = os.path.join(BASE_DIR, 'core/markdown/')
