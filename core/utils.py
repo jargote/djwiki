@@ -1,7 +1,3 @@
-import os
-import hashlib
-
-from django.conf import settings
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
@@ -33,18 +29,3 @@ def get_view_paginator(model, page_number=1, count=50, filters={},
         paginator = paginator.page(paginator.num_pages)
 
     return paginator
-
-
-def get_markdown_filename(page_url):
-    """This function will return an absolute path of ta WikiPage instance
-    markdown file.
-
-    Attributes:
-        page_url: String representing a page url.
-
-    Returns:
-        String representing a file's absolute path.
-    """
-
-    url_hash = hashlib.sha1(page_url).hexdigest()
-    return os.path.join(settings.MARKDOWN_ROOT, '%s.txt' % url_hash)
