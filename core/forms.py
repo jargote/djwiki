@@ -1,5 +1,4 @@
 from django import forms
-from django.utils.html import strip_tags
 
 
 class WikiPageForm(forms.Form):

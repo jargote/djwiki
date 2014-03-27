@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from core.models import WikiPage, Changelog
 
 
-
 class WikiPageTest(TestCase):
     """Tests suite for WikiPage model class."""
 

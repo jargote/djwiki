@@ -67,7 +67,6 @@ def edit_page(request, page_url):
             wikipage_edit.html page.
     """
 
-
     try:
         # Trying to fetch wiki page given its page url.
         wikipage = WikiPage.objects.get(url=page_url)

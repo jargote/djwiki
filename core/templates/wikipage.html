@@ -11,7 +11,7 @@
         <li><a href="{% url 'edit_page' wikipage.url %}">Edit Page</a></li>
         <li><a href="{% url 'changelog' wikipage.url %}">Change Log</a></li>
     </ul>
-    {{ wikipage.rendered_html|safe }}
+    {{ wikipage.rendered_htmlsafe }}
     {% endif %}
 {% endwith %}
 {% endblock %}

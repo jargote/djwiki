@@ -3,6 +3,7 @@
 {% block content %}
 {% with wikipages=wikipages %}
 <h1>{{ title }}</h1>
+
 {% if wikipages %}
 {% comment %}Showing a list of WikiPages created in djwiki{% endcomment %}
 <ol class="list-unstyled">
@@ -13,8 +14,10 @@
 {% else %}
 <span>No wiki entries at the moment.</span>
 {% endif %}
+
 {% with paginator=wikipages %}
 {% include "snippets/pagination.html" %}
 {% endwith %}
+
 {% endwith %}
 {% endblock %}
