@@ -74,9 +74,7 @@ def edit_page(request, page_url):
 
     except exceptions.ObjectDoesNotExist:
         # Create page automatically if this one does not exist.
-        wikipage = WikiPage.objects.create(
-            url=page_url, markdown=utils.get_markdown_filename(page_url))
-        wikipage.body = ''
+        wikipage = WikiPage.objects.create(url=page_url)
 
     # Show WikiPage edit form.
     if request.method == 'GET':
@@ -87,6 +85,7 @@ def edit_page(request, page_url):
         wikipage_form = WikiPageForm(request.POST)
         if wikipage_form.is_valid():
             wikipage.body = wikipage_form.cleaned_data['body']
+            wikipage.save()
             Changelog.objects.create(
                 wikipage=wikipage,
                 comments=wikipage_form.cleaned_data['comments'])
@@ -139,5 +138,5 @@ def changelog(request, page_url=None):
         changelogs = utils.get_view_paginator(Changelog, page_number)
 
     return render(request, 'changelog.html', {'title': title,
-                                              'show_page': not page_url,
+                                              'page_url': page_url,
                                               'changelogs': changelogs})
