@@ -1,12 +1,20 @@
-{% include "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
-<div class="page-title">Edit page "{{ wikipage.title }}".</div>
-<div class="page-body">
-    <form method="post">
-        {% csrf_token %}
-        {{ wikiform }}
-        <input type="submit" value="Save">
-    </form>
+<h1>Edit page "{{ wikipage.title }}".</h1>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="body">{{ wikiform.body.label }}</label>
+        <textarea class="form-control" id="body" name="body" rows="15" placeholder="markdown">{{ wikiform.body.value }}</textarea>
+        <p class="bg-danger">{{ wikiform.body.errors }}</p>
     </div>
+    <div class="form-group">
+        <label for="comments">{{ wikiform.comments.label }}</label>
+        <textarea class="form-control" id="comments" name="comments" placeholder="Change comments"></textarea>
+        <p class="bg-danger">{{ wikiform.comments.errors }}</p>
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+    <button type="button" class="btn btn-default" onclick="window.location.href='{% url "view_page" wikipage.url %}';">Cancel</button>
+</form><br/>
 {% endblock %}

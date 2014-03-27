@@ -1,19 +1,17 @@
-{% include "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 {% with wikipage=wikipage %}
     {% if not wikipage.id %}
-    <div class="page-title">The page "{{ wikipage.title }}" does not exits.</div>
-    <div class="page-body"><a href="{% url 'edit_page' wikipage.url %}">Create this page</a></div>
+    <h2>The page "{{ wikipage.title }}" does not exits.</h2>
+    <p><a href="{% url 'edit_page' wikipage.url %}">Create this page</a></p>
     {% else %}
-    <div class="page-title">{{ wikipage.title }}</div>
-    <div class="page-body">
-        <ul class="page-options">
-            <li><a href="{% url 'edit_page' wikipage.url %}">Edit Page</a></li>
-            <li><a href="{% url 'changelog' wikipage.url %}">Change Log</a></li>
-        </ul>
-        {{ wikipage.rendered_html|safe }}
-    </div>
+    <h2>{{ wikipage.title }}</h2>
+    <ul class="list-inline">
+        <li><a href="{% url 'edit_page' wikipage.url %}">Edit Page</a></li>
+        <li><a href="{% url 'changelog' wikipage.url %}">Change Log</a></li>
+    </ul>
+    {{ wikipage.rendered_html|safe }}
     {% endif %}
 {% endwith %}
 {% endblock %}

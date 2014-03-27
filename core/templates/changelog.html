@@ -1,31 +1,35 @@
-{% include "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 {% with changelogs as changelogs %}
-<div class="page-title">{{ title }}</div>
-<div class="page-body">
-    {% if changelogs %}
-    {% comment %}Showing a list of change logs for a WikiPages{% endcomment %}
-    <ul>
-        {% for change in changelogs %}
-        {% with page=change.wikipage %}
-        <li>
-            <span>On {{ change.created_on }}</span>
-            <span>By {{ change.created_by }}</span>
-            {% if show_page %}
-            <span>In <a href="{% url 'view_page' page.url %}">{{ page.title }}</a></span>
-            {% endif %}
-            <span>"{{ change.comments|escape }}"</span>
-        </li>
-        {% endwith %}
-        {% endfor %}
-    </ul>
-    {% else %}
-    <span>No change log entries at the moment.</span>
-    {% endif %}
-</div>
+<h2>{{ title }}</h2>
+
+{% if changelogs %}
+{% comment %}Showing a list of change logs for a WikiPages{% endcomment %}
+<ul>
+    {% for change in changelogs %}
+    {% with page=change.wikipage %}
+    <li>On <strong>{{ change.created_on }}</strong>
+        By <em>{{ change.created_by }}</em>
+        {% if not page_url %}
+        In <a href="{% url 'view_page' page.url %}">{{ page.title }}</a>
+        {% endif %}
+        <p>"{{ change.comments|escape }}"</p>
+    </li>
+    {% endwith %}
+    {% endfor %}
+</ul>
+{% else %}
+<p>No change log entries at the moment.</p>
+{% endif %}
+
+{% if page_url %}
+<p><a href="{% url "view_page" page_url %}"><< Back</a></p>
+{% endif %}
+
 {% with paginator=changelogs %}
 {% include "snippets/pagination.html" %}
 {% endwith %}
+
 {% endwith %}
 {% endblock %}
