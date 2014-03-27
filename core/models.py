@@ -10,7 +10,7 @@ class WikiPage(models.Model):
 
     Attributes:
         url: String representing the WikiPage's instance url.
-        markdown: File path to the WikiPage markdown file.
+        body: Text in markdown syntax to render html.
         author: User who's created the WikiPage model instance.
         created_on: Datetime timestamp that represents when a page instance was
             created.
@@ -19,7 +19,7 @@ class WikiPage(models.Model):
     """
 
     url = models.CharField('Url', max_length=150)
-    markdown = models.FilePathField()
+    body = models.TextField()
     author = models.ForeignKey(User, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
@@ -54,33 +54,6 @@ class WikiPage(models.Model):
         """
 
         return markdown.markdown(self.body)
-
-    @property
-    def body(self):
-        """This property returns the content of the markdown file associated
-         with this WikiPage instance.
-
-        Returns:
-            Unicode string representing markdown file content.
-        """
-
-        f = open(self.markdown, 'rb')
-        content = ''.join(f.readlines())
-        f.close()
-
-        return content
-
-    @body.setter
-    def body(self, text):
-        """Updates the content of the markdown file associated to this WikiPage.
-
-        Attributes:
-            text: Unicode string representing the new value for the markdown
-            file.
-        """
-        f = open(self.markdown, 'wb')
-        f.write(text)
-        f.close()
 
 
 class Changelog(models.Model):
