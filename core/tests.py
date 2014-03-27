@@ -1,11 +1,6 @@
-import os
-import hashlib
-
-from django.conf import settings
 from django.test import TestCase
 from django.contrib.auth.models import User
 
-from core import utils
 from core.models import WikiPage, Changelog
 
 
@@ -93,20 +88,3 @@ class ChangelogTest(TestCase):
 
         # Testing that author username is 'Anonymous'.
         self.assertEqual('Anonymous', changelog.created_by)
-
-
-class UtilsTest(TestCase):
-    """Test suite for utility functions."""
-
-    def test_get_markdown_filename(self):
-        """Tests that given WikiPage url an absolute path pointing to its
-        markdown file is returned.
-        """
-
-        page_url = 'ThisIsADummy_url'
-        filename = '%s.txt' % hashlib.sha1(page_url).hexdigest()
-        expected_path = os.path.join(settings.MARKDOWN_ROOT, filename)
-
-        # Testing that absolute path is returned correctly.
-        self.assertEqual(expected_path, utils.get_markdown_filename(page_url))
-
